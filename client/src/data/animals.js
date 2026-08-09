@@ -1,0 +1,40 @@
+import heroImage from '../assets/hero.png'
+
+export const animals = [
+  {
+    id: 1,
+    name: 'Bruno',
+    type: 'dog',
+    image: heroImage,
+    location: 'Davanagere',
+    distance: '1.2 km',
+    condition: 'Possible leg injury',
+    raised: 7500,
+    target: 10000,
+    urgent: true,
+  },
+  {
+    id: 2,
+    name: 'Luna',
+    type: 'cat',
+    image: heroImage,
+    location: 'Davanagere',
+    distance: '2.4 km',
+    condition: 'Needs medical care',
+    raised: 4200,
+    target: 8000,
+    urgent: false,
+  },
+  {
+    id: 3,
+    name: 'Rocky',
+    type: 'dog',
+    image: heroImage,
+    location: 'Davanagere',
+    distance: '3.1 km',
+    condition: 'Road accident',
+    raised: 3200,
+    target: 12000,
+    urgent: true,
+  },
+]
