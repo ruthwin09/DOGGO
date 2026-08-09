@@ -4,6 +4,7 @@ import AnimalSection from '../components/AnimalSection'
 import NearbyAnimals from '../components/NearbyAnimals'
 import PawHeroes from '../components/PawHeroes'
 import SuccessStories from '../components/SuccessStories'
+import ReportCTA from '../components/ReportCTA'
 
 function Home() {
   return (
@@ -14,6 +15,7 @@ function Home() {
       <NearbyAnimals />
       <PawHeroes />
       <SuccessStories />
+      <ReportCTA />
     </main>
   )
 }
