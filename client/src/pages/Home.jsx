@@ -1,7 +1,7 @@
 function Home() {
   return (
     <main className="min-h-screen bg-[#f7f8f3]">
-      <section className="flex min-h-screen items-center justify-center px-6">
+      <section className="flex min-h-screen items-center justify-center px-6 pt-28">
         <div className="max-w-4xl text-center">
 
           <p className="mb-5 text-sm font-bold uppercase tracking-[0.3em] text-emerald-700">
