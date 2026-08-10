@@ -68,6 +68,22 @@ const animalReportSchema = new mongoose.Schema(
         type: Number,
         required: [true, 'Longitude is required'],
       },
+
+      // GeoJSON Point
+      coordinates: {
+        type: [Number],
+        required: true,
+        validate: {
+          validator: function (value) {
+            return (
+              Array.isArray(value) &&
+              value.length === 2
+            )
+          },
+          message:
+            'Coordinates must contain [longitude, latitude]',
+        },
+      },
     },
 
     contactPhone: {
@@ -93,6 +109,11 @@ const animalReportSchema = new mongoose.Schema(
     timestamps: true,
   }
 )
+
+// MongoDB geospatial index
+animalReportSchema.index({
+  'location.coordinates': '2dsphere',
+})
 
 module.exports = mongoose.model(
   'AnimalReport',

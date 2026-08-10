@@ -35,6 +35,24 @@ const createAnimalReport = async (req, res) => {
       })
     }
 
+    const latitude = Number(location.latitude)
+    const longitude = Number(location.longitude)
+
+    // Validate coordinates
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid latitude or longitude',
+      })
+    }
+
     // Create report
     const report = await AnimalReport.create({
       reporter: req.user._id,
@@ -58,9 +76,15 @@ const createAnimalReport = async (req, res) => {
           ? location.address.trim()
           : '',
 
-        latitude: Number(location.latitude),
+        latitude,
 
-        longitude: Number(location.longitude),
+        longitude,
+
+        // GeoJSON uses [longitude, latitude]
+        coordinates: [
+          longitude,
+          latitude,
+        ],
       },
 
       contactPhone: contactPhone
@@ -79,10 +103,8 @@ const createAnimalReport = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-
       message:
         'Animal rescue report created successfully',
-
       report: populatedReport,
     })
   } catch (error) {
@@ -99,6 +121,108 @@ const createAnimalReport = async (req, res) => {
   }
 }
 
+// ==========================================
+// GET NEARBY ANIMAL REPORTS
+// ==========================================
+
+const getNearbyReports = async (req, res) => {
+  try {
+    const {
+      latitude,
+      longitude,
+      radius = 10,
+    } = req.query
+
+    const lat = Number(latitude)
+    const lng = Number(longitude)
+    const radiusKm = Number(radius)
+
+    // Validate coordinates
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Valid latitude and longitude are required',
+      })
+    }
+
+    // Validate coordinate ranges
+    if (
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Invalid latitude or longitude',
+      })
+    }
+
+    // Validate radius
+    if (
+      !Number.isFinite(radiusKm) ||
+      radiusKm <= 0 ||
+      radiusKm > 100
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Radius must be between 1 and 100 km',
+      })
+    }
+
+    // Find reports within radius
+    const reports =
+      await AnimalReport.find({
+        'location.coordinates': {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [lng, lat],
+            },
+            $maxDistance:
+              radiusKm * 1000,
+          },
+        },
+      })
+        .populate(
+          'reporter',
+          'name profileImage phone'
+        )
+        .sort({
+          createdAt: -1,
+        })
+
+    return res.status(200).json({
+      success: true,
+      count: reports.length,
+      radius: radiusKm,
+      reports,
+    })
+  } catch (error) {
+    console.error(
+      'Get nearby reports error:',
+      error.message
+    )
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Unable to retrieve nearby reports',
+    })
+  }
+}
+
+// ==========================================
+// EXPORT CONTROLLERS
+// ==========================================
+
 module.exports = {
   createAnimalReport,
+  getNearbyReports,
 }
