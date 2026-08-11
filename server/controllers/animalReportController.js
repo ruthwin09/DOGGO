@@ -219,10 +219,97 @@ const getNearbyReports = async (req, res) => {
 }
 
 // ==========================================
+// GET MY ANIMAL REPORTS
+// ==========================================
+
+const getMyReports = async (req, res) => {
+  try {
+    const reports =
+      await AnimalReport.find({
+        reporter: req.user._id,
+      })
+        .populate(
+          'reporter',
+          'name email phone profileImage'
+        )
+        .sort({
+          createdAt: -1,
+        })
+
+    return res.status(200).json({
+      success: true,
+      count: reports.length,
+      reports,
+    })
+  } catch (error) {
+    console.error(
+      'Get my reports error:',
+      error.message
+    )
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Unable to retrieve your reports',
+    })
+  }
+}
+
+// ==========================================
+// GET SINGLE ANIMAL REPORT
+// ==========================================
+
+const getAnimalReport = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const report =
+      await AnimalReport.findById(id)
+        .populate(
+          'reporter',
+          'name email phone profileImage'
+        )
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Animal report not found',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      report,
+    })
+  } catch (error) {
+    console.error(
+      'Get animal report error:',
+      error.message
+    )
+
+    // Invalid MongoDB ObjectId
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid report ID',
+      })
+    }
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Unable to retrieve animal report',
+    })
+  }
+}
+
+// ==========================================
 // EXPORT CONTROLLERS
 // ==========================================
 
 module.exports = {
   createAnimalReport,
   getNearbyReports,
+  getMyReports,
+  getAnimalReport,
 }
