@@ -394,6 +394,67 @@ const updateReportStatus = async (req, res) => {
   }
 }
 // ==========================================
+// GET RESCUE DASHBOARD STATISTICS
+// ==========================================
+
+const getReportStats = async (req, res) => {
+  try {
+    const stats = await AnimalReport.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+    ])
+
+    const statusCounts = {
+      reported: 0,
+      verified: 0,
+      rescue_assigned: 0,
+      in_treatment: 0,
+      recovered: 0,
+      closed: 0,
+    }
+
+    stats.forEach((item) => {
+      if (
+        Object.prototype.hasOwnProperty.call(
+          statusCounts,
+          item._id
+        )
+      ) {
+        statusCounts[item._id] = item.count
+      }
+    })
+
+    const totalReports =
+      Object.values(statusCounts).reduce(
+        (total, count) => total + count,
+        0
+      )
+
+    return res.status(200).json({
+      success: true,
+      totalReports,
+      statusCounts,
+    })
+  } catch (error) {
+    console.error(
+      'Get report statistics error:',
+      error.message
+    )
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Unable to retrieve report statistics',
+    })
+  }
+}
+// ==========================================
 // EXPORT CONTROLLERS
 // ==========================================
 
@@ -403,4 +464,5 @@ module.exports = {
   getMyReports,
   getAnimalReport,
   updateReportStatus,
+  getReportStats,
 }

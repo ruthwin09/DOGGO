@@ -6,6 +6,7 @@ const {
   getMyReports,
   getAnimalReport,
   updateReportStatus,
+  getReportStats,
 } = require('../controllers/animalReportController')
 
 const {
@@ -42,6 +43,15 @@ router.get(
   '/my',
   protect,
   getMyReports
+)
+// ==========================================
+// GET RESCUE DASHBOARD STATISTICS
+// ==========================================
+
+router.get(
+  '/stats',
+  protect,
+  getReportStats
 )
 
 // ==========================================
