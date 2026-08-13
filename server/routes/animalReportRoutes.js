@@ -7,6 +7,7 @@ const {
   getAnimalReport,
   updateReportStatus,
   getReportStats,
+  getReports,
 } = require('../controllers/animalReportController')
 
 const {
@@ -52,6 +53,16 @@ router.get(
   '/stats',
   protect,
   getReportStats
+)
+// ==========================================
+// GET ALL ANIMAL REPORTS
+// WITH FILTERING + PAGINATION
+// ==========================================
+
+router.get(
+  '/',
+  protect,
+  getReports
 )
 
 // ==========================================

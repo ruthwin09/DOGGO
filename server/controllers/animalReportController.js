@@ -455,6 +455,222 @@ const getReportStats = async (req, res) => {
   }
 }
 // ==========================================
+// GET ANIMAL REPORTS
+// WITH FILTERING + PAGINATION
+// ==========================================
+
+const getReports = async (req, res) => {
+  try {
+    const {
+      status,
+      animalType,
+      severity,
+      injuryType,
+      page = 1,
+      limit = 10,
+    } = req.query
+
+    // ==========================================
+    // ALLOWED FILTER VALUES
+    // ==========================================
+
+    const allowedStatuses = [
+      'reported',
+      'verified',
+      'rescue_assigned',
+      'in_treatment',
+      'recovered',
+      'closed',
+    ]
+
+    const allowedAnimalTypes = [
+      'dog',
+      'cat',
+      'other',
+    ]
+
+    const allowedSeverities = [
+      'low',
+      'medium',
+      'high',
+      'critical',
+    ]
+
+    const allowedInjuryTypes = [
+      'injury',
+      'accident',
+      'illness',
+      'abandoned',
+      'trapped',
+      'other',
+    ]
+
+    // ==========================================
+    // VALIDATE FILTERS
+    // ==========================================
+
+    if (
+      status &&
+      !allowedStatuses.includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status filter',
+        allowedValues: allowedStatuses,
+      })
+    }
+
+    if (
+      animalType &&
+      !allowedAnimalTypes.includes(animalType)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Invalid animalType filter',
+        allowedValues:
+          allowedAnimalTypes,
+      })
+    }
+
+    if (
+      severity &&
+      !allowedSeverities.includes(severity)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Invalid severity filter',
+        allowedValues:
+          allowedSeverities,
+      })
+    }
+
+    if (
+      injuryType &&
+      !allowedInjuryTypes.includes(
+        injuryType
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Invalid injuryType filter',
+        allowedValues:
+          allowedInjuryTypes,
+      })
+    }
+
+    // ==========================================
+    // PAGINATION
+    // ==========================================
+
+    const currentPage = Math.max(
+      Number(page) || 1,
+      1
+    )
+
+    const requestedLimit =
+      Number(limit) || 10
+
+    const reportsPerPage = Math.min(
+      Math.max(requestedLimit, 1),
+      50
+    )
+
+    const skip =
+      (currentPage - 1) *
+      reportsPerPage
+
+    // ==========================================
+    // BUILD MONGODB FILTER
+    // ==========================================
+
+    const filter = {}
+
+    if (status) {
+      filter.status = status
+    }
+
+    if (animalType) {
+      filter.animalType = animalType
+    }
+
+    if (severity) {
+      filter.severity = severity
+    }
+
+    if (injuryType) {
+      filter.injuryType = injuryType
+    }
+
+    // ==========================================
+    // GET TOTAL MATCHING REPORTS
+    // ==========================================
+
+    const totalReports =
+      await AnimalReport.countDocuments(
+        filter
+      )
+
+    // ==========================================
+    // GET PAGINATED REPORTS
+    // ==========================================
+
+    const reports =
+      await AnimalReport.find(filter)
+        .populate(
+          'reporter',
+          'name profileImage phone'
+        )
+        .sort({
+          createdAt: -1,
+        })
+        .skip(skip)
+        .limit(reportsPerPage)
+
+    const totalPages =
+      Math.ceil(
+        totalReports /
+          reportsPerPage
+      )
+
+    return res.status(200).json({
+      success: true,
+
+      reports,
+
+      pagination: {
+        currentPage,
+
+        limit: reportsPerPage,
+
+        totalReports,
+
+        totalPages,
+
+        hasNextPage:
+          currentPage <
+          totalPages,
+
+        hasPreviousPage:
+          currentPage > 1,
+      },
+    })
+  } catch (error) {
+    console.error(
+      'Get reports error:',
+      error.message
+    )
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Unable to retrieve animal reports',
+    })
+  }
+}
+// ==========================================
 // EXPORT CONTROLLERS
 // ==========================================
 
@@ -465,4 +681,5 @@ module.exports = {
   getAnimalReport,
   updateReportStatus,
   getReportStats,
+  getReports,
 }
