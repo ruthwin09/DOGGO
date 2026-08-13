@@ -302,7 +302,97 @@ const getAnimalReport = async (req, res) => {
     })
   }
 }
+// ==========================================
+// UPDATE ANIMAL REPORT STATUS
+// ==========================================
 
+const updateReportStatus = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { status } = req.body
+
+    const allowedStatuses = [
+      'reported',
+      'verified',
+      'rescue_assigned',
+      'in_treatment',
+      'recovered',
+      'closed',
+    ]
+
+    // Validate status
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Status is required',
+      })
+    }
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid report status',
+        allowedStatuses,
+      })
+    }
+
+    // Find report
+    const report = await AnimalReport.findById(id)
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Animal report not found',
+      })
+    }
+
+    // Only report owner can update for now
+    if (
+      report.reporter.toString() !==
+      req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'You are not authorized to update this report',
+      })
+    }
+
+    // Update status
+    report.status = status
+
+    await report.save()
+
+    const updatedReport =
+      await AnimalReport.findById(report._id).populate(
+        'reporter',
+        'name email phone profileImage'
+      )
+
+    return res.status(200).json({
+      success: true,
+      message: 'Report status updated successfully',
+      report: updatedReport,
+    })
+  } catch (error) {
+    console.error(
+      'Update report status error:',
+      error.message
+    )
+
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid report ID',
+      })
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to update report status',
+    })
+  }
+}
 // ==========================================
 // EXPORT CONTROLLERS
 // ==========================================
@@ -312,4 +402,5 @@ module.exports = {
   getNearbyReports,
   getMyReports,
   getAnimalReport,
+  updateReportStatus,
 }

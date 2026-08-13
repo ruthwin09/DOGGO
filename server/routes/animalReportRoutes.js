@@ -5,6 +5,7 @@ const {
   getNearbyReports,
   getMyReports,
   getAnimalReport,
+  updateReportStatus,
 } = require('../controllers/animalReportController')
 
 const {
@@ -51,6 +52,16 @@ router.get(
   '/:id',
   protect,
   getAnimalReport
+)
+
+// ==========================================
+// UPDATE REPORT STATUS
+// ==========================================
+
+router.patch(
+  '/:id/status',
+  protect,
+  updateReportStatus
 )
 
 module.exports = router
